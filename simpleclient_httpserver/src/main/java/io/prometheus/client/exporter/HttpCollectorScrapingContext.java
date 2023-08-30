@@ -10,6 +10,9 @@ import com.sun.net.httpserver.HttpExchange;
 
 import io.prometheus.client.CollectorScrapingContextSupport;
 
+/**
+ * CollectorScrapingContext implementation for HTTPServer endpoint
+ */
 public class HttpCollectorScrapingContext extends CollectorScrapingContextSupport {
 
 	protected HttpExchange httpExchange;

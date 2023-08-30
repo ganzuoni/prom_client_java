@@ -863,6 +863,54 @@ registration time instead of `describe`. If this could cause problems, either
 implement a proper `describe`, or if that's not practical have `describe`
 return an empty list.
 
+### Multi-Target Collector
+
+To support multi-target pattern you can create a custom collector overriding the purposed internal method
+
+```java
+	class ExtendedCollector extends Collector {
+
+		@Override
+		public List<MetricFamilySamples> collect() {
+			return new ArrayList<Collector.MetricFamilySamples>();
+		}
+
+		@Override
+		protected List<MetricFamilySamples> collectSamples(CollectorScrapingContext scrapingContext) {
+			String[] targetName = scrapingContext.getParameterValues("target");
+			List<String> labelsList = new ArrayList<String>();
+			labelsList.add("target");
+			List<String> labelValuesList = new ArrayList<String>();
+			Sample sample = null;
+			if (targetName == null || targetName.length == 0) {
+				labelValuesList.add("defaultTarget");
+				sample = new MetricFamilySamples.Sample("a_total", labelsList, labelValuesList, 1.0);
+			} else {
+				labelValuesList.add(targetName[0]);
+				sample = new MetricFamilySamples.Sample("a_total", labelsList, labelValuesList, Math.random());
+			}
+			return Arrays.<MetricFamilySamples> asList(new MetricFamilySamples("a_total", Type.COUNTER, "help", Arrays.asList(sample)));
+		}
+	}
+
+```
+`CollectorScrapingContext` provides methods to access http-related infos from the request originally received by the endpoint
+
+```java
+public interface CollectorScrapingContext {
+	String getRequestURI();
+
+	String getContextPath();
+
+	String[] getParameterValues(String name);
+
+	Predicate<String> getSampleNameFilter();
+}
+
+```
+
+
+
 ### DropwizardExports Collector
 
 DropwizardExports collector is available to proxy metrics from Dropwizard.

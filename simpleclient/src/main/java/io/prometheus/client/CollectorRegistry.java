@@ -159,6 +159,13 @@ public class CollectorRegistry {
 		return new MetricFamilySamplesEnumeration(sampleNameFilter);
 	}
 
+	/**
+	 * Enumeration of metrics provided by Collectors that can select return 
+	 * samples of timeseries (tipically) based on query params (see Prometheus multi-target pattern)
+	 * 
+	 * @param scrapingContext
+	 *            the (http) request context triggering metrics collection
+	 */
 	public Enumeration<MetricFamilySamples> metricFamilySamples(CollectorScrapingContext scrapingContext) {
 		return new MetricFamilySamplesEnumeration(scrapingContext);
 	}

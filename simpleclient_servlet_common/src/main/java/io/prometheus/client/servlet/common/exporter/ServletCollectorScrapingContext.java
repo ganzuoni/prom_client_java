@@ -3,6 +3,10 @@ package io.prometheus.client.servlet.common.exporter;
 import io.prometheus.client.CollectorScrapingContextSupport;
 import io.prometheus.client.servlet.common.adapter.HttpServletRequestAdapter;
 
+/**
+ * CollectorScrapingContext implementation for Servlet endpoint
+ */
+
 public class ServletCollectorScrapingContext extends CollectorScrapingContextSupport {
 
 	protected HttpServletRequestAdapter request;

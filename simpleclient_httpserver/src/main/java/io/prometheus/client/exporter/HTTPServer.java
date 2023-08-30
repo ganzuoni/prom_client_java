@@ -45,6 +45,7 @@ import java.util.zip.GZIPOutputStream;
  * HTTPServer server = new HTTPServer(1234);
  * }
  * </pre>
+ * 
  */
 public class HTTPServer implements Closeable {
 
@@ -227,6 +228,7 @@ public class HTTPServer implements Closeable {
 		private Supplier<Predicate<String>> sampleNameFilterSupplier;
 		private Authenticator authenticator;
 		private HttpsConfigurator httpsConfigurator;
+		private boolean useScrapingContext = false;
 
 		/**
 		 * Port to bind to. Must not be called together with
@@ -358,6 +360,14 @@ public class HTTPServer implements Closeable {
 			this.httpsConfigurator = configurator;
 			return this;
 		}
+		
+		/**
+		 * Optional: set true when using custom Collector that supports multi-target pattern
+		 */
+		public Builder withUseScrapingContext(boolean b) {
+			useScrapingContext = b;
+			return this;
+		}
 
 		/**
 		 * Build the HTTPServer
@@ -377,7 +387,7 @@ public class HTTPServer implements Closeable {
 				assertNull(inetAddress, "cannot configure 'httpServer' and 'inetAddress' at the same time");
 				assertNull(inetSocketAddress, "cannot configure 'httpServer' and 'inetSocketAddress' at the same time");
 				assertNull(httpsConfigurator, "cannot configure 'httpServer' and 'httpsConfigurator' at the same time");
-				return new HTTPServer(executorService, httpServer, registry, daemon, sampleNameFilterSupplier, authenticator);
+				return new HTTPServer(executorService, httpServer, registry, daemon, sampleNameFilterSupplier, authenticator, useScrapingContext);
 			} else if (inetSocketAddress != null) {
 				assertZero(port, "cannot configure 'inetSocketAddress' and 'port' at the same time");
 				assertNull(hostname, "cannot configure 'inetSocketAddress' and 'hostname' at the same time");
@@ -399,7 +409,7 @@ public class HTTPServer implements Closeable {
 				httpServer = HttpServer.create(inetSocketAddress, 3);
 			}
 
-			return new HTTPServer(executorService, httpServer, registry, daemon, sampleNameFilterSupplier, authenticator);
+			return new HTTPServer(executorService, httpServer, registry, daemon, sampleNameFilterSupplier, authenticator, useScrapingContext);
 		}
 
 		private void assertNull(Object o, String msg) {
@@ -419,16 +429,34 @@ public class HTTPServer implements Closeable {
 	 * Start an HTTP server serving Prometheus metrics from the given registry
 	 * using the given {@link HttpServer}. The {@code httpServer} is expected to
 	 * already be bound to an address
+	 * HTTPMetricHandler will pass CollectorScrapingContext to Collector
 	 */
 	public HTTPServer(HttpServer httpServer, CollectorRegistry registry, boolean daemon) throws IOException {
-		this(null, httpServer, registry, daemon, null, null);
+		this(httpServer, registry, daemon, false);
+	}
+
+	/**
+	 * Start an HTTP server serving Prometheus metrics from the given registry
+	 * using the given {@link HttpServer}. The {@code httpServer} is expected to
+	 * already be bound to an address
+	 */
+	public HTTPServer(HttpServer httpServer, CollectorRegistry registry, boolean daemon, boolean useScrapingContext) throws IOException {
+		this(null, httpServer, registry, daemon, null, null, useScrapingContext);
+	}
+	
+	/**
+	 * Start an HTTP server serving Prometheus metrics from the given registry.
+	 * HTTPMetricHandler will pass CollectorScrapingContext to Collector
+	 */
+	public HTTPServer(InetSocketAddress addr, CollectorRegistry registry, boolean daemon) throws IOException {
+		this(addr, registry, daemon, false);
 	}
 
 	/**
 	 * Start an HTTP server serving Prometheus metrics from the given registry.
 	 */
-	public HTTPServer(InetSocketAddress addr, CollectorRegistry registry, boolean daemon) throws IOException {
-		this(HttpServer.create(addr, 3), registry, daemon);
+	public HTTPServer(InetSocketAddress addr, CollectorRegistry registry, boolean daemon, boolean useScrapingContext) throws IOException {
+		this(HttpServer.create(addr, 3), registry, daemon, useScrapingContext);
 	}
 
 	/**
@@ -438,6 +466,7 @@ public class HTTPServer implements Closeable {
 	public HTTPServer(InetSocketAddress addr, CollectorRegistry registry) throws IOException {
 		this(addr, registry, false);
 	}
+
 
 	/**
 	 * Start an HTTP server serving the default Prometheus registry.
@@ -470,12 +499,14 @@ public class HTTPServer implements Closeable {
 	}
 
 	private HTTPServer(ExecutorService executorService, HttpServer httpServer, CollectorRegistry registry, boolean daemon, Supplier<Predicate<String>> sampleNameFilterSupplier,
-			Authenticator authenticator) {
+			Authenticator authenticator, boolean useScrapingContext) {
 		if (httpServer.getAddress() == null)
 			throw new IllegalArgumentException("HttpServer hasn't been bound to an address");
 
 		server = httpServer;
-		HttpHandler mHandler = new HTTPMetricHandler(registry, sampleNameFilterSupplier);
+		HTTPMetricHandler mHandler = new HTTPMetricHandler(registry, sampleNameFilterSupplier);
+		mHandler.setUseScrapingContext(useScrapingContext);
+		
 		HttpContext mContext = server.createContext("/", mHandler);
 		if (authenticator != null) {
 			mContext.setAuthenticator(authenticator);

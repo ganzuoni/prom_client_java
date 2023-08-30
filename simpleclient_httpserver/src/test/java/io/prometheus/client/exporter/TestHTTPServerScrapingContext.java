@@ -38,7 +38,7 @@ public class TestHTTPServerScrapingContext {
 
 	@Test
 	public void testSimpleRequest() throws IOException {
-		HTTPServer httpServer = new HTTPServer(new InetSocketAddress(0), registry);
+		HTTPServer httpServer = new HTTPServer(new InetSocketAddress(0), registry, false, true);
 
 		try {
 			String body = createHttpRequestBuilder(httpServer, "/metrics").build().execute().getBody();
@@ -50,7 +50,7 @@ public class TestHTTPServerScrapingContext {
 
 	@Test
 	public void testSingleName() throws IOException {
-		HTTPServer httpServer = new HTTPServer(new InetSocketAddress(0), registry);
+		HTTPServer httpServer = new HTTPServer(new InetSocketAddress(0), registry, false, true);
 
 		try {
 			String body = createHttpRequestBuilder(httpServer, "/metrics?target=promTarget").build().execute().getBody();
