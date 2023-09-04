@@ -79,7 +79,10 @@ public abstract class Collector {
 	 * @param scrapingContext
 	 *            the (http) request context triggering metrics collection
 	 */
-	public List<MetricFamilySamples> collect(CollectorScrapingContext scrapingContext) {
+	public List<MetricFamilySamples> collectExtended(CollectorScrapingContext scrapingContext) {
+		if (scrapingContext == null) {
+			return collect();
+		}
 		List<MetricFamilySamples> all = collectSamples(scrapingContext);
 		if (scrapingContext.getSampleNameFilter() == null) {
 			return all;

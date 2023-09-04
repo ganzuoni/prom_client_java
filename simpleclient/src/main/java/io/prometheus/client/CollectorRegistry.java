@@ -238,7 +238,7 @@ public class CollectorRegistry {
 
 			while (collectorIter.hasNext()) {
 				if (scrapingContext != null) {
-					metricFamilySamples = collectorIter.next().collect(scrapingContext).iterator();
+					metricFamilySamples = collectorIter.next().collectExtended(scrapingContext).iterator();
 				} else {
 					metricFamilySamples = collectorIter.next().collect(sampleNameFilter).iterator();
 				}
