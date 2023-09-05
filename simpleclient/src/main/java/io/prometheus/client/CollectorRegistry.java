@@ -237,10 +237,11 @@ public class CollectorRegistry {
 			}
 
 			while (collectorIter.hasNext()) {
-				if (scrapingContext != null) {
-					metricFamilySamples = collectorIter.next().collectExtended(scrapingContext).iterator();
+				Collector collector = collectorIter.next();
+				if (scrapingContext != null && collector.supportsCollectorScrapingContext()) {
+					metricFamilySamples = collector.collectExtended(scrapingContext).iterator();
 				} else {
-					metricFamilySamples = collectorIter.next().collect(sampleNameFilter).iterator();
+					metricFamilySamples = collector.collect(sampleNameFilter).iterator();
 				}
 				while (metricFamilySamples.hasNext()) {
 					next = metricFamilySamples.next().filter(sampleNameFilter);

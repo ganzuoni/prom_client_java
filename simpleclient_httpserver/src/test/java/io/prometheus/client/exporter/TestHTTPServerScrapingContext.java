@@ -68,6 +68,11 @@ public class TestHTTPServerScrapingContext {
 		}
 
 		@Override
+		public boolean supportsCollectorScrapingContext() {
+			return true;
+		}
+
+		@Override
 		protected List<MetricFamilySamples> collectSamples(CollectorScrapingContext scrapingContext) {
 			String[] targetName = scrapingContext.getParameterValues("target");
 			List<String> labelsList = new ArrayList<String>();

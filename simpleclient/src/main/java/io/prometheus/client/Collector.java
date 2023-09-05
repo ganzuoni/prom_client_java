@@ -90,6 +90,16 @@ public abstract class Collector {
 		List<MetricFamilySamples> remaining = filterSamples(all, scrapingContext.getSampleNameFilter());
 		return remaining;
 	}
+
+	/**
+	 * This method allows full backward compatibility. CollectorRegistry checks if a specific collector supports the new interface.
+	 * If an endpoint is configured to pass CollectorScrapingContext to collector there is no way to support Collector subclasses
+	 * that override {@link collect(Predicate<String>)}
+	 * @return
+	 */
+	public boolean supportsCollectorScrapingContext() {
+		return false;
+	}
 	
 	/**
 	 * The default implementation collects all {@code MetricFamilySamples}
